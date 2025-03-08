@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using ShortUrlGen;
 using Quartz;
 using Quartz.Impl;
-using Microsoft.Extensions.Hosting;
+using ShortUrlGen;
 
 var builder = WebApplication.CreateBuilder(args);
 var service = builder.Services;
@@ -16,6 +15,8 @@ service.AddControllers();
 service.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(conf.GetConnectionString("DefaultConnection")));
 
+service.AddTransient<RemoveShortLinkJob>();
+
 service.AddQuartz();
 
 service.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
@@ -28,7 +29,7 @@ var app = builder.Build();
 var scheduler = await StdSchedulerFactory.GetDefaultScheduler();
 await scheduler.Start();
 
-//  Options Job and Trigger
+// Options Job and Trigger
 IJobDetail job = JobBuilder.Create<RemoveShortLinkJob>()
     .WithIdentity("RemoveShortLinkJob", "Group1")
     .Build();
