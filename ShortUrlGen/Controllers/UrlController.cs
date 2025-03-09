@@ -1,6 +1,7 @@
 ﻿using System.Xml.Serialization;
 using Base62;
 using Microsoft.AspNetCore.Mvc;
+using ShortUrlGen.Interfaces;
 
 namespace ShortUrlGen.Controllers
 {
@@ -8,12 +9,10 @@ namespace ShortUrlGen.Controllers
     [Route("api/[controller]")]
     public class UrlController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly Base62Converter _base62;
-        public UrlController(ApplicationDbContext context)
+        private readonly IMappingRepository _mappingRepository;
+        public UrlController(IMappingRepository mappingRepository)
         {
-            _context = context;
-            _base62 = new Base62Converter();
+            _mappingRepository = mappingRepository;   
         }
 
         [HttpPost]
@@ -21,27 +20,8 @@ namespace ShortUrlGen.Controllers
         {
             try
             {
-                Uri uri = new Uri(longUrl);
-                string path = uri.AbsolutePath;
-
-                var shortUrl = _base62.Encode(path);
-
-                if (shortUrl.Length > 10)
-                {
-                    shortUrl = shortUrl.Substring(0, 10);
-                }
-
-                var mapping = new UrlMapping
-                {
-                    LongUrl = longUrl,
-                    Count = 1,
-                    ShortUrl = shortUrl,
-                    CreateAt = DateTime.Parse(DateTime.Now.ToString("dd.MM.yyyy H:m:ss")),
-                    ExpiresAt = DateTime.Now.AddSeconds(second),
-                };
-
-                _context.UrlMappings.Add(mapping);
-                _context.SaveChanges();
+                var shortUrl = _mappingRepository.ShortUrlGenerate(longUrl);
+                var mapping = _mappingRepository.SaveUrlMapping(longUrl, second, shortUrl);
 
                 return Ok(new { shortUrl = $"http://localhost:5051/{mapping.ShortUrl}" });
             }
@@ -60,18 +40,14 @@ namespace ShortUrlGen.Controllers
         {
             try
             {
-                var urlMapping = _context.UrlMappings.FirstOrDefault(d => d.ShortUrl == shortUrl);
+                var urlMapping = _mappingRepository.GetLongUrlByShortUrl(shortUrl);
 
                 if (urlMapping == null)
                 {
                     return NotFound("Not found");
                 }
 
-                urlMapping.Count++;
-                urlMapping.UpdateAt = DateTime.Now;
-                urlMapping.ExpiresAt = DateTime.Now.AddSeconds(10);
-
-                _context.SaveChanges();
+                _mappingRepository.UrlMappingUpdate(urlMapping);
 
                 return Ok(urlMapping.LongUrl);
             }

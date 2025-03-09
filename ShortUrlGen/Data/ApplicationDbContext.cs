@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ShortUrlGen.Data.Models;
 
-namespace ShortUrlGen
+namespace ShortUrlGen.Data
 {
     public class ApplicationDbContext : DbContext
     {

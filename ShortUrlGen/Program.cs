@@ -1,7 +1,11 @@
+using Base62;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Quartz.Impl;
 using ShortUrlGen;
+using ShortUrlGen.Data;
+using ShortUrlGen.Interfaces;
+using ShortUrlGen.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 var service = builder.Services;
@@ -11,9 +15,12 @@ var conf = builder.Configuration;
 service.AddEndpointsApiExplorer();
 service.AddSwaggerGen();
 service.AddControllers();
+service.AddSingleton<Base62Converter>();
 
 service.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(conf.GetConnectionString("DefaultConnection")));
+
+service.AddScoped<IMappingRepository, MappingRepository>();
 
 service.AddTransient<RemoveShortLinkJob>();
 

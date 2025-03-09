@@ -1,4 +1,5 @@
 ﻿using Quartz;
+using ShortUrlGen.Data;
 
 namespace ShortUrlGen
 {
@@ -13,15 +14,17 @@ namespace ShortUrlGen
         public async Task Execute(IJobExecutionContext context)
         {
             var expiredLinks = _context.UrlMappings.Where(u => u.ExpiresAt < DateTime.Now).ToList();
+            int count = 0;
 
             foreach (var item in expiredLinks)
             {
                 _context.UrlMappings.Remove(item);
+                count++;
             }
 
             await _context.SaveChangesAsync();
 
-            Console.WriteLine($"URL removed{DateTime.Now}");
+            Console.WriteLine($"URL removed {DateTime.Now}, Count = {count}");
         }
     }
 }

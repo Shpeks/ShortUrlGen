@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ShortUrlGen
+namespace ShortUrlGen.Data.Models
 {
     public class UrlMapping
     {
         [Key]
         public int Id { get; set; }
-        
-        public string LongUrl {  get; set; } // Изначальная ссылка
+
+        public string LongUrl { get; set; } // Изначальная ссылка
 
         public string ShortUrl { get; set; }
 
-        public DateTime CreateAt { get; set; } 
+        public DateTime CreateAt { get; set; }
 
         public DateTime? UpdateAt { get; set; } // Последнее обновление
 
