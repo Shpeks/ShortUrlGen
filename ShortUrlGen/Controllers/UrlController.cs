@@ -28,7 +28,7 @@ namespace ShortUrlGen.Controllers
 
                 if (shortUrl.Length > 10)
                 {
-                    shortUrl.Substring(0, 10);
+                    shortUrl = shortUrl.Substring(0, 10);
                 }
 
                 var mapping = new UrlMapping
@@ -36,7 +36,7 @@ namespace ShortUrlGen.Controllers
                     LongUrl = longUrl,
                     Count = 1,
                     ShortUrl = shortUrl,
-                    CreateAt = DateTime.Parse(DateTime.Now.ToString("dd.MM.yyyy H:m")),
+                    CreateAt = DateTime.Parse(DateTime.Now.ToString("dd.MM.yyyy H:m:ss")),
                     ExpiresAt = DateTime.Now.AddSeconds(second),
                 };
 
