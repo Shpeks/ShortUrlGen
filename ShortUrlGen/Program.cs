@@ -17,32 +17,24 @@ service.AddDbContext<ApplicationDbContext>(options =>
 
 service.AddTransient<RemoveShortLinkJob>();
 
-service.AddQuartz();
+service.AddQuartz(q => 
+{
+    var jobkey = new JobKey("SampleJob");
+
+    q.AddJob<RemoveShortLinkJob>(opts => opts.WithIdentity(jobkey));
+    q.AddTrigger(opts => opts
+        .ForJob(jobkey)
+        .WithIdentity("SampleJob-trigger")
+        .WithSimpleSchedule(x => x          //.WithCronSchedule("0 0/1 * * * ?")); 60 sec~
+            .WithIntervalInSeconds(60)
+            .RepeatForever()));
+});
 
 service.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var app = builder.Build();
-
-// Options Quartz
-var scheduler = await StdSchedulerFactory.GetDefaultScheduler();
-await scheduler.Start();
-
-// Options Job and Trigger
-IJobDetail job = JobBuilder.Create<RemoveShortLinkJob>()
-    .WithIdentity("RemoveShortLinkJob", "Group1")
-    .Build();
-
-ITrigger trigger = TriggerBuilder.Create()
-    .WithIdentity("RemoveShortLinkTrigger", "Group1")
-    .WithSimpleSchedule(x => x
-        .WithIntervalInSeconds(60)
-        .RepeatForever())
-    .Build();
-
-// Start Job and Trigger
-await scheduler.ScheduleJob(job, trigger);
 
 // Endpoint
 if (app.Environment.IsDevelopment())
