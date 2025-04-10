@@ -1,22 +1,17 @@
-﻿using Base62;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Security.Cryptography;
 using ShortUrlGen.Data;
 using ShortUrlGen.Data.Models;
 using ShortUrlGen.Interfaces;
-using System.Buffers.Text;
-using System.Xml.Serialization;
+using MhanoHarkness;
 
 namespace ShortUrlGen.Repository
 {
     public class MappingRepository : IMappingRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly Base62Converter _base62;
-        public MappingRepository(ApplicationDbContext context, Base62Converter base62)
+        public MappingRepository(ApplicationDbContext context)
         {
             _context = context;
-            _base62 = base62;
         }
 
         public void UrlMappingUpdate(UrlMapping urlMapping)
@@ -37,17 +32,13 @@ namespace ShortUrlGen.Repository
 
         public string ShortUrlGenerate(string longUrl)
         {
-            Uri uri = new Uri(longUrl);
-            string path = uri.AbsolutePath;
+            var rng = RandomNumberGenerator.Create();
+            var unit32Buffer = new byte[8];
+            rng.GetBytes(unit32Buffer);
 
-            var shortUrl = _base62.Encode(path);
+            var shortUrl = Base32Url.ToBase32String(unit32Buffer);
 
-            if (shortUrl.Length > 10)
-            {
-                shortUrl = shortUrl.Substring(0, 10);
-            }
-
-            return shortUrl;
+            return shortUrl.ToString();
         }
 
         public UrlMapping SaveUrlMapping(string longUrl, int second, string shortUrl)
